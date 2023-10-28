@@ -10,14 +10,15 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PrinterDemo {
-    private final List<String> items;
+    private final Map<String, Double> itemsWithPrices;
     private final Date date;
 
-    public PrinterDemo(List<String> items) {
-        this.items = items;
+    public PrinterDemo(Map<String, Double> itemsWithPrices) {
+        this.itemsWithPrices = itemsWithPrices;
         this.date = new Date();
     }
 
@@ -31,9 +32,9 @@ public class PrinterDemo {
         String phone = "747857939";
 
         int contentWidth = 226;
-        int staticContentHeight = 6 * 12;
-        int dynamicContentHeight = items.size() * 12;
-        int totalHeight = staticContentHeight + dynamicContentHeight;
+        int staticContentHeight = 6 * 14;
+        int dynamicContentHeight = itemsWithPrices.size() * 12;
+        int totalHeight = staticContentHeight + dynamicContentHeight + 2 * 12; // Add extra space for the total
 
         Paper paper = new Paper();
         paper.setSize(contentWidth, totalHeight);
@@ -50,10 +51,10 @@ public class PrinterDemo {
 
                 int x = 0;
                 int y = 10;
-                int lineHeight = 12;
+                int lineHeight = 14;
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                Font smallFont = new Font("Arial", Font.PLAIN, 12);
-                Font headerFont = new Font("Arial", Font.BOLD, 14);
+                Font smallFont = new Font("Arial", Font.PLAIN, 11);
+                Font headerFont = new Font("Arial", Font.BOLD, 13);
                 FontMetrics fontMetrics = g.getFontMetrics(headerFont);
 
                 int headerCompanyName = (contentWidth - fontMetrics.stringWidth(companyName)) / 2;
@@ -83,10 +84,20 @@ public class PrinterDemo {
                 g.drawString(dateFormat.format(date), headerDate, dynamicContentY);
                 dynamicContentY += lineHeight;
 
-                for (String item : items) {
-                    g.drawString(item, x, dynamicContentY);
+                for (Map.Entry<String, Double> entry : itemsWithPrices.entrySet()) {
+                    g.drawString(entry.getKey(), x, dynamicContentY);
+                    int priceX = 150;
+                    g.drawString(String.format("%.2f", entry.getValue()), priceX, dynamicContentY);
                     dynamicContentY += lineHeight;
                 }
+
+                double total = itemsWithPrices.values().stream().mapToDouble(Double::doubleValue).sum();
+                g.setFont(headerFont);
+                int totalX = 100;
+                g.drawString("Total:", totalX, dynamicContentY);
+                g.setFont(smallFont);
+                int totalAmountX = 150;
+                g.drawString(String.format("%.2f", total), totalAmountX, dynamicContentY);
 
                 return Printable.PAGE_EXISTS;
             }
@@ -100,14 +111,13 @@ public class PrinterDemo {
     }
 
     public static void main(String[] args) {
-        List<String> pasapalosItems = List.of(
-                "Alitas de pollo",
-                "Tequeños",
-                "Mini hamburguesas",
-                "Papas fritas",
-                "Deditos de queso");
+        Map<String, Double> itemsWithPrices = new HashMap<>();
+        itemsWithPrices.put("Cachapa con queso", 9.0);
+        itemsWithPrices.put("Tequeños", 7.0);
+        itemsWithPrices.put("Hamburguesa Pasapalos", 12.0);
+        itemsWithPrices.put("Coca-cola", 1.8);
 
-        PrinterDemo printer = new PrinterDemo(pasapalosItems);
+        PrinterDemo printer = new PrinterDemo(itemsWithPrices);
         printer.print();
     }
 }
